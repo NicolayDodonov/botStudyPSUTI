@@ -1,16 +1,22 @@
 package main
 
 import (
+	event_consumer "BotStudyPSUTI/Consumer/event-consumer"
+	clientTg "BotStudyPSUTI/client/telegram"
+	eventTg "BotStudyPSUTI/events/telegram"
 	"flag"
-	"fmt"
 	"log"
 )
 
 func main() {
 	//todo: Токен Активации бота
-	token := mustToken()
-	fmt.Println(token)
+	Event := eventTg.New(clientTg.New(mustToken()))
 
+	log.Print("Service is started")
+	Consumer := event_consumer.New(&Event, &Event, 100)
+	if err := Consumer.Start(); err != nil {
+		log.Fatal("Service is stopped")
+	}
 	//todo: Активация Клиента API
 
 	//todo: получатель данных
@@ -21,7 +27,7 @@ func mustToken() string {
 	token := flag.String(
 		"token",
 		"",
-		"for acces to bot api",
+		"for access to bot api",
 	)
 
 	flag.Parse()
