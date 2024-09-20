@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	//todo: Токен Активации бота
 	Event := eventTg.New(clientTg.New(mustToken()))
 
 	log.Print("Service is started")
@@ -17,10 +16,6 @@ func main() {
 	if err := Consumer.Start(); err != nil {
 		log.Fatal("Service is stopped")
 	}
-	//todo: Активация Клиента API
-
-	//todo: получатель данных
-	//todo: обработчик данных
 }
 
 func mustToken() string {
