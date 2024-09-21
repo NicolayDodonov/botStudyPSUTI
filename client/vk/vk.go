@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	methodGet  = "messages.getHistory"
-	methodSend = "messages.send"
-	vkBotHost  = "api.vk.com"
+	methodConnect     = "messages.getLongPollServer"
+	methodGet         = "messages.getLongPollHistory"
+	methodSend        = "messages.send"
+	vkBotHost         = "api.vk.com"
+	groupId       int = 178512611
 )
 
 type Client struct {
@@ -30,24 +32,56 @@ func New(token string) *Client {
 	}
 }
 
-func (c *Client) Updates(offset, count int) ([]IncommingMessage, error) {
+func (c *Client) Updates() ([]Message, error) {
+	ts, err := c.lpConnect()
+	if err != nil {
+		return nil, fmt.Errorf("[ERR] Cant connect LongPollyServer: %v", err)
+	}
+
+	res, err := c.lpRequest(ts)
+	if err != nil {
+		return nil, fmt.Errorf("[ERR] Cant get MessageArray from LongPollyServer: %v", err)
+	}
+
+	return res, nil
+}
+
+func (c *Client) lpConnect() (int, error) {
 	q := url.Values{}
-	q.Add("offset", strconv.Itoa(offset))
-	q.Add("count", strconv.Itoa(count))
 	q.Add("access_token", c.token)
+	q.Add("group_id", strconv.Itoa(groupId))
+
+	data, err := c.request(methodConnect, q)
+	if err != nil {
+		return 0, err
+	}
+
+	var res LongPollyResponse
+
+	if err := json.Unmarshal(data, &res); err != nil {
+		return 0, err
+	}
+
+	return res.Ts, nil
+}
+
+func (c *Client) lpRequest(ts int) ([]Message, error) {
+	q := url.Values{}
+	q.Add("access_token", c.token)
+	q.Add("ts", strconv.Itoa(ts))
 
 	data, err := c.request(methodGet, q)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []IncommingMessage
+	var res LongPollyUpdate
 
 	if err := json.Unmarshal(data, &res); err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	return res.MessageArray.Messages, nil
 }
 
 func (c *Client) SendMessage(user_id, chat_id int, message string) error {
