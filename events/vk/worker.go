@@ -37,7 +37,6 @@ func (w *Worker) Fetch(limit int) ([]events.Event, error) {
 		}
 		res = append(res, event(m))
 	}
-
 	return res, nil
 }
 

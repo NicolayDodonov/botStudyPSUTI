@@ -16,7 +16,7 @@ const (
 func (w *Worker) doCmd(text string, userId int) error {
 	text = strings.TrimSpace(text)
 
-	log.Printf("got new command '%s' from '%v", text, userId)
+	log.Printf("[Vk] got new command '%s' from '%v", text, userId)
 
 	switch text {
 	case CmdStart:

@@ -11,34 +11,39 @@ import (
 )
 
 const (
-	methodConnect     = "messages.getLongPollServer"
-	methodGet         = "messages.getLongPollHistory"
-	methodSend        = "messages.send"
-	vkBotHost         = "api.vk.com"
-	groupId       int = 178512611
+	methodConnect       = "messages.getLongPollServer"
+	methodGet           = "messages.getLongPollHistory"
+	methodSend          = "messages.send"
+	vkBotHost           = "api.vk.com"
+	groupId         int = 178512611
+	vkAPIVersion        = "5.199"
+	countQueryToLPS     = 1
 )
 
 type Client struct {
-	host   string
-	token  string
-	client http.Client
+	host          string
+	token         string
+	ts            int
+	countQueryLPS int
+	client        http.Client
 }
 
 func New(token string) *Client {
 	return &Client{
-		host:   vkBotHost,
-		token:  token,
-		client: http.Client{},
+		host:          vkBotHost,
+		token:         token,
+		countQueryLPS: 20,
+		client:        http.Client{},
 	}
 }
 
 func (c *Client) Updates() ([]Message, error) {
-	ts, err := c.lpConnect()
+	err := c.lpConnect()
 	if err != nil {
 		return nil, fmt.Errorf("[ERR] Cant connect LongPollyServer: %v", err)
 	}
 
-	res, err := c.lpRequest(ts)
+	res, err := c.lpRequest()
 	if err != nil {
 		return nil, fmt.Errorf("[ERR] Cant get MessageArray from LongPollyServer: %v", err)
 	}
@@ -46,29 +51,55 @@ func (c *Client) Updates() ([]Message, error) {
 	return res, nil
 }
 
-func (c *Client) lpConnect() (int, error) {
+func (c *Client) SendMessage(user_id int, message string) error {
+	q := url.Values{}
+	q.Add("user_id", strconv.Itoa(user_id))
+	q.Add("random_id", "0")
+	q.Add("message", message)
+	q.Add("access_token", c.token)
+
+	_, err := c.request(methodSend, q)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Метод для подключения к Long Polly серверу
+func (c *Client) lpConnect() error {
+	if c.countQueryLPS < countQueryToLPS {
+		c.countQueryLPS++
+		return nil
+	} else {
+		c.countQueryLPS = 0
+	}
+
 	q := url.Values{}
 	q.Add("access_token", c.token)
 	q.Add("group_id", strconv.Itoa(groupId))
 
 	data, err := c.request(methodConnect, q)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	var res LongPollyResponse
+	var res LongPollyConnect
 
 	if err := json.Unmarshal(data, &res); err != nil {
-		return 0, err
+		return err
 	}
 
-	return res.Ts - 1, nil
+	c.ts = res.Response.Ts
+	return nil
 }
 
-func (c *Client) lpRequest(ts int) ([]Message, error) {
+// Метод получения сообщений из long Polly сервера
+func (c *Client) lpRequest() ([]Message, error) {
 	q := url.Values{}
 	q.Add("access_token", c.token)
-	q.Add("ts", strconv.Itoa(ts))
+	q.Add("ts", strconv.Itoa(c.ts))
+	q.Add("new_pts", "0")
 
 	data, err := c.request(methodGet, q)
 	if err != nil {
@@ -81,34 +112,22 @@ func (c *Client) lpRequest(ts int) ([]Message, error) {
 		return nil, err
 	}
 
-	return res.MessageArray.Messages, nil
+	return res.Response.MessageArray.Messages, nil
 }
 
-func (c *Client) SendMessage(user_id int, message string) error {
-	q := url.Values{}
-	q.Add("user_id", strconv.Itoa(user_id))
-	q.Add("message", message)
-	q.Add("access_token", c.token)
-
-	_, err := c.request(methodSend, q)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
+// Метод запросов к Vk API
 func (c *Client) request(method string, query url.Values) ([]byte, error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   c.host,
 		Path:   path.Join("method", method),
 	}
-
 	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("[ERR] Cant do request: %w", err)
 	}
+
+	query.Add("v", vkAPIVersion)
 
 	req.URL.RawQuery = query.Encode()
 	resp, err := c.client.Do(req)
