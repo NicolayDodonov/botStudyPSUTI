@@ -31,6 +31,8 @@ func main() {
 		if err := Consumer.Start(); err != nil {
 			log.Fatal("Telegram service is stopped")
 		}
+	default:
+		log.Fatal("[ERR] Сan't determine the type app")
 	}
 
 }
