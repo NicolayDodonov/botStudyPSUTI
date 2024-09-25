@@ -62,7 +62,7 @@ func (c *Client) lpConnect() (int, error) {
 		return 0, err
 	}
 
-	return res.Ts, nil
+	return res.Ts - 1, nil
 }
 
 func (c *Client) lpRequest(ts int) ([]Message, error) {
@@ -84,10 +84,9 @@ func (c *Client) lpRequest(ts int) ([]Message, error) {
 	return res.MessageArray.Messages, nil
 }
 
-func (c *Client) SendMessage(user_id, chat_id int, message string) error {
+func (c *Client) SendMessage(user_id int, message string) error {
 	q := url.Values{}
 	q.Add("user_id", strconv.Itoa(user_id))
-	q.Add("chat_id", strconv.Itoa(chat_id))
 	q.Add("message", message)
 	q.Add("access_token", c.token)
 
