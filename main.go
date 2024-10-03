@@ -6,6 +6,7 @@ import (
 	clientVk "BotStudyPSUTI/client/vk"
 	eventTg "BotStudyPSUTI/events/telegram"
 	eventVk "BotStudyPSUTI/events/vk"
+	storageSQLite "BotStudyPSUTI/storage/sqlite"
 	"flag"
 	"log"
 )
@@ -14,9 +15,14 @@ func main() {
 
 	token, types := mustFlag()
 
+	storage, err := storageSQLite.New("")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	switch types {
 	case "tg":
-		Worker := eventTg.New(clientTg.New(token))
+		Worker := eventTg.New(clientTg.New(token), storage)
 		log.Print("Telegram service is started")
 
 		Consumer := eventConsumer.New(&Worker, &Worker, 100)
