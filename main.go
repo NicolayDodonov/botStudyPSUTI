@@ -15,7 +15,7 @@ func main() {
 
 	token, types := mustFlag()
 
-	storage, err := storageSQLite.New("")
+	storage, err := storageSQLite.New("storage/data/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}

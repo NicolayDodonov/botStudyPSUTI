@@ -3,14 +3,13 @@ package telegram
 import (
 	"BotStudyPSUTI/client/telegram"
 	"BotStudyPSUTI/events"
-	"BotStudyPSUTI/storage"
-	storageSQLite "BotStudyPSUTI/storage/sqlite"
+	storage "BotStudyPSUTI/storage/sqlite"
 	"fmt"
 )
 
 type Worker struct {
 	tg     *telegram.Client
-	db     *storage.Storage
+	db     *storage.SQLiteStorage
 	offset int
 }
 
@@ -19,7 +18,7 @@ type Meta struct {
 	Username string
 }
 
-func New(client *telegram.Client, db *storageSQLite.SQLiteStorage) Worker {
+func New(client *telegram.Client, db *storage.SQLiteStorage) Worker {
 	return Worker{
 		tg: client,
 		db: db,

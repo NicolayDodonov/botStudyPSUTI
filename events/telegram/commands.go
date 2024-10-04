@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"BotStudyPSUTI/events"
+	"BotStudyPSUTI/storage"
 	"log"
 	"strings"
 )
@@ -14,11 +15,11 @@ const (
 )
 
 func (w *Worker) doCmd(text string, chatID int, username string) error {
-	text = strings.TrimSpace(text)
+	textArray := strings.Split(text, ":")
 
 	log.Printf("got new command '%s' from '%s", text, username)
 
-	switch text {
+	switch textArray[0] {
 	case CmdStart:
 		err := w.tg.SendMessage(chatID, events.MsgStart)
 		return err
@@ -29,7 +30,15 @@ func (w *Worker) doCmd(text string, chatID int, username string) error {
 		err := w.tg.SendMessage(chatID, events.MsgHelp)
 		return err
 	case CmdOrder:
-		err := w.tg.SendMessage(chatID, events.MsgOrder)
+		if len(textArray) == 2 {
+			err := w.db.Save(textArray[1], &storage.UserInfo{Username: username, TypeApplication: storage.Tg})
+			if err != nil {
+				return err
+			}
+			err = w.tg.SendMessage(chatID, events.MsgSaveOrder)
+			return err
+		}
+		err := w.tg.SendMessage(chatID, events.MsgHelpOrder)
 		return err
 	default:
 		err := w.tg.SendMessage(chatID, events.MsgUnknown)
