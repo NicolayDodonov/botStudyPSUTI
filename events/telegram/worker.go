@@ -63,7 +63,7 @@ func (w *Worker) workMessage(e events.Event) error {
 	}
 
 	if err := w.doCmd(e.Text, meta.ChatId, meta.Username); err != nil {
-		return fmt.Errorf("[ERR] cant understand command")
+		return fmt.Errorf("cant understand command")
 	}
 
 	return nil

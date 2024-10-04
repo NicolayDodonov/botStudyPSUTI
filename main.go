@@ -20,6 +20,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = storage.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	switch types {
 	case "tg":
 		Worker := eventTg.New(clientTg.New(token), storage)

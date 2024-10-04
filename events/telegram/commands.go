@@ -19,7 +19,7 @@ func (w *Worker) doCmd(text string, chatID int, username string) error {
 
 	log.Printf("got new command '%s' from '%s", text, username)
 
-	switch textArray[0] {
+	switch strings.TrimSpace(textArray[0]) {
 	case CmdStart:
 		err := w.tg.SendMessage(chatID, events.MsgStart)
 		return err
@@ -33,6 +33,7 @@ func (w *Worker) doCmd(text string, chatID int, username string) error {
 		if len(textArray) == 2 {
 			err := w.db.Save(textArray[1], &storage.UserInfo{Username: username, TypeApplication: storage.Tg})
 			if err != nil {
+				w.tg.SendMessage(chatID, events.MsgErrorOrder)
 				return err
 			}
 			err = w.tg.SendMessage(chatID, events.MsgSaveOrder)

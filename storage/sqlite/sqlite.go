@@ -29,7 +29,7 @@ func New(path string) (*SQLiteStorage, error) {
 
 // Save сохраняет запись в order database.db.
 func (s *SQLiteStorage) Save(order string, user *storage.UserInfo) error {
-	q := `INSERT INTO order (user_order, user_name, type_app) values (?, ?)`
+	q := `INSERT INTO "order" (user_order, user_name, type_app) values (?, ?, ?)`
 	_, err := s.db.Exec(q, order, user.Username, user.TypeApplication)
 
 	if err != nil {
@@ -85,14 +85,15 @@ func (s *SQLiteStorage) Print(query string) (string, error) {
 
 // Init проверяет существование базовой таблицы order в database.db. Если его нет, создаёт таблицу с индексом.
 func (s *SQLiteStorage) Init() error {
-	q1 := `CREATE TABLE IF NOT EXISTS order (id INT, user_order TEXT, user_name TEXT, type_app TEXT)`
-	_, err := s.db.Exec(q1)
-	if err != nil {
-		return fmt.Errorf("can't init database: ", err)
-	}
 
-	q2 := `CREATE INDEX IF NOT EXISTS id ON order(id)`
-	_, err = s.db.Exec(q2)
+	q := `CREATE TABLE IF NOT EXISTS "order" (
+		"id"	INTEGER,
+		"user_order" TEXT,
+		"user_name"	TEXT,
+		"type_app"	TEXT,
+		PRIMARY KEY("id" AUTOINCREMENT)
+	);`
+	_, err := s.db.Exec(q)
 	if err != nil {
 		return fmt.Errorf("can't init database: ", err)
 	}
