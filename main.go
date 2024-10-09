@@ -1,7 +1,7 @@
 package main
 
 import (
-	eventConsumer "BotStudyPSUTI/Consumer/event-consumer"
+	eventConsumer "BotStudyPSUTI/consumer/event-consumer"
 	clientTg "BotStudyPSUTI/client/telegram"
 	clientVk "BotStudyPSUTI/client/vk"
 	eventTg "BotStudyPSUTI/events/telegram"

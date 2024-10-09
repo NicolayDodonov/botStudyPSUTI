@@ -17,7 +17,7 @@ const (
 )
 
 type Client struct {
-	host     string
+	hots     string
 	basePath string
 	client   http.Client
 }
